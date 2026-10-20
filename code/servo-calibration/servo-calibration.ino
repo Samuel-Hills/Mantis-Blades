@@ -8,10 +8,10 @@
 
 constexpr uint8_t SERVO_ONE_PIN = 9;
 constexpr uint8_t SERVO_TWO_PIN = 10;
-constexpr int STARTUP_ANGLE = 135;
-constexpr int MAX_TEST_ANGLE = 270;
+constexpr int STARTUP_ANGLE = 180;
+constexpr int MAX_TEST_ANGLE = 360;
 constexpr int SERVO_MIN_PULSE_US = 500;
-constexpr int SERVO_MAX_PULSE_US = 2500;
+constexpr int SERVO_MAX_PULSE_US = 3000;
 
 Servo servoOne;
 Servo servoTwo;
@@ -45,9 +45,11 @@ void printState() {
 
 void printHelp() {
   Serial.println(F("Commands:"));
-  Serial.println(F("  1 210   move servo 1 to 210 degrees"));
+  Serial.println(F("  1 310   move servo 1 to 310 degrees"));
   Serial.println(F("  2 90    move servo 2 to 90 degrees"));
-  Serial.println(F("  b 210 90  move both servos"));
+  Serial.println(F("  b 310 90  move both servos"));
+  Serial.println(F("  u 1 2600  send a raw 2600 us pulse to servo 1"));
+  Serial.println(F("  u 2 2600  send a raw 2600 us pulse to servo 2"));
   Serial.println(F("  d       detach both servos for manual movement"));
   Serial.println(F("  a       attach both servos at their last commanded angles"));
   Serial.println(F("  ?       print current commanded angles"));
@@ -56,8 +58,16 @@ void printHelp() {
 
 void attachServos() {
   if (!servosAttached) {
-    servoOne.attach(SERVO_ONE_PIN);
-    servoTwo.attach(SERVO_TWO_PIN);
+    servoOne.attach(
+      SERVO_ONE_PIN,
+      SERVO_MIN_PULSE_US,
+      SERVO_MAX_PULSE_US
+    );
+    servoTwo.attach(
+      SERVO_TWO_PIN,
+      SERVO_MIN_PULSE_US,
+      SERVO_MAX_PULSE_US
+    );
     servosAttached = true;
   }
 
@@ -88,6 +98,30 @@ void setBoth(int firstAngle, int secondAngle) {
   printState();
 }
 
+void setRawPulse(uint8_t servoNumber, int pulseWidth) {
+  pulseWidth = constrain(
+    pulseWidth,
+    SERVO_MIN_PULSE_US,
+    SERVO_MAX_PULSE_US
+  );
+
+  attachServos();
+
+  if (servoNumber == 1) {
+    servoOne.writeMicroseconds(pulseWidth);
+    Serial.print(F("Servo 1 pulse: "));
+  } else if (servoNumber == 2) {
+    servoTwo.writeMicroseconds(pulseWidth);
+    Serial.print(F("Servo 2 pulse: "));
+  } else {
+    Serial.println(F("Use servo number 1 or 2."));
+    return;
+  }
+
+  Serial.print(pulseWidth);
+  Serial.println(F(" us"));
+}
+
 void handleCommand(String command) {
   command.trim();
 
@@ -110,6 +144,15 @@ void handleCommand(String command) {
     } else {
       Serial.println(F("Use: b 120 45"));
     }
+  } else if (commandType == 'u') {
+    int servoNumber = 0;
+    int pulseWidth = 0;
+
+    if (sscanf(command.c_str(), "u %d %d", &servoNumber, &pulseWidth) == 2) {
+      setRawPulse(static_cast<uint8_t>(servoNumber), pulseWidth);
+    } else {
+      Serial.println(F("Use: u 1 2600"));
+    }
   } else if (commandType == 'd') {
     servoOne.detach();
     servoTwo.detach();
@@ -131,8 +174,8 @@ void setup() {
   attachServos();
 
   Serial.println(F("Servo calibration tool ready."));
-  Serial.println(F("Initial command is 135 degrees for both servos."));
-  Serial.println(F("Test range is 0-270 degrees using 500-2500 microseconds."));
+  Serial.println(F("Initial command is 180 degrees for both servos."));
+  Serial.println(F("Test range is 0-360 degrees using 500-3000 microseconds."));
   printHelp();
   printState();
 }
