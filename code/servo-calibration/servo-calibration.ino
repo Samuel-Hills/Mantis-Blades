@@ -8,7 +8,10 @@
 
 constexpr uint8_t SERVO_ONE_PIN = 9;
 constexpr uint8_t SERVO_TWO_PIN = 10;
-constexpr int STARTUP_ANGLE = 90;
+constexpr int STARTUP_ANGLE = 135;
+constexpr int MAX_TEST_ANGLE = 270;
+constexpr int SERVO_MIN_PULSE_US = 500;
+constexpr int SERVO_MAX_PULSE_US = 2500;
 
 Servo servoOne;
 Servo servoTwo;
@@ -18,7 +21,19 @@ int servoTwoAngle = STARTUP_ANGLE;
 bool servosAttached = false;
 
 int clampAngle(int angle) {
-  return constrain(angle, 0, 180);
+  return constrain(angle, 0, MAX_TEST_ANGLE);
+}
+
+void writeAngle(Servo& servo, int angle) {
+  const int pulseWidth = map(
+    angle,
+    0,
+    MAX_TEST_ANGLE,
+    SERVO_MIN_PULSE_US,
+    SERVO_MAX_PULSE_US
+  );
+
+  servo.writeMicroseconds(pulseWidth);
 }
 
 void printState() {
@@ -30,9 +45,9 @@ void printState() {
 
 void printHelp() {
   Serial.println(F("Commands:"));
-  Serial.println(F("  1 120   move servo 1 to 120 degrees"));
-  Serial.println(F("  2 45    move servo 2 to 45 degrees"));
-  Serial.println(F("  b 120 45  move both servos"));
+  Serial.println(F("  1 210   move servo 1 to 210 degrees"));
+  Serial.println(F("  2 90    move servo 2 to 90 degrees"));
+  Serial.println(F("  b 210 90  move both servos"));
   Serial.println(F("  d       detach both servos for manual movement"));
   Serial.println(F("  a       attach both servos at their last commanded angles"));
   Serial.println(F("  ?       print current commanded angles"));
@@ -46,21 +61,21 @@ void attachServos() {
     servosAttached = true;
   }
 
-  servoOne.write(servoOneAngle);
-  servoTwo.write(servoTwoAngle);
+  writeAngle(servoOne, servoOneAngle);
+  writeAngle(servoTwo, servoTwoAngle);
 }
 
 void setServoOne(int angle) {
   servoOneAngle = clampAngle(angle);
   attachServos();
-  servoOne.write(servoOneAngle);
+  writeAngle(servoOne, servoOneAngle);
   printState();
 }
 
 void setServoTwo(int angle) {
   servoTwoAngle = clampAngle(angle);
   attachServos();
-  servoTwo.write(servoTwoAngle);
+  writeAngle(servoTwo, servoTwoAngle);
   printState();
 }
 
@@ -68,8 +83,8 @@ void setBoth(int firstAngle, int secondAngle) {
   servoOneAngle = clampAngle(firstAngle);
   servoTwoAngle = clampAngle(secondAngle);
   attachServos();
-  servoOne.write(servoOneAngle);
-  servoTwo.write(servoTwoAngle);
+  writeAngle(servoOne, servoOneAngle);
+  writeAngle(servoTwo, servoTwoAngle);
   printState();
 }
 
@@ -116,7 +131,8 @@ void setup() {
   attachServos();
 
   Serial.println(F("Servo calibration tool ready."));
-  Serial.println(F("Initial command is 90 degrees for both servos."));
+  Serial.println(F("Initial command is 135 degrees for both servos."));
+  Serial.println(F("Test range is 0-270 degrees using 500-2500 microseconds."));
   printHelp();
   printState();
 }
