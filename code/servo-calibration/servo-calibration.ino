@@ -8,16 +8,17 @@
 
 constexpr uint8_t SERVO_ONE_PIN = 9;
 constexpr uint8_t SERVO_TWO_PIN = 10;
-constexpr int STARTUP_ANGLE = 180;
-constexpr int MAX_TEST_ANGLE = 360;
+constexpr int SERVO_ONE_STARTUP_ANGLE = 60;
+constexpr int SERVO_TWO_STARTUP_ANGLE = 90;
+constexpr int MAX_TEST_ANGLE = 180;
 constexpr int SERVO_MIN_PULSE_US = 500;
-constexpr int SERVO_MAX_PULSE_US = 3000;
+constexpr int SERVO_MAX_PULSE_US = 2500;
 
 Servo servoOne;
 Servo servoTwo;
 
-int servoOneAngle = STARTUP_ANGLE;
-int servoTwoAngle = STARTUP_ANGLE;
+int servoOneAngle = SERVO_ONE_STARTUP_ANGLE;
+int servoTwoAngle = SERVO_TWO_STARTUP_ANGLE;
 bool servosAttached = false;
 
 int clampAngle(int angle) {
@@ -45,11 +46,11 @@ void printState() {
 
 void printHelp() {
   Serial.println(F("Commands:"));
-  Serial.println(F("  1 310   move servo 1 to 310 degrees"));
+  Serial.println(F("  1 60    move servo 1 to 60 degrees"));
   Serial.println(F("  2 90    move servo 2 to 90 degrees"));
-  Serial.println(F("  b 310 90  move both servos"));
-  Serial.println(F("  u 1 2600  send a raw 2600 us pulse to servo 1"));
-  Serial.println(F("  u 2 2600  send a raw 2600 us pulse to servo 2"));
+  Serial.println(F("  b 60 90  move both servos"));
+  Serial.println(F("  u 1 2200  send a raw 2200 us pulse to servo 1"));
+  Serial.println(F("  u 2 2200  send a raw 2200 us pulse to servo 2"));
   Serial.println(F("  d       detach both servos for manual movement"));
   Serial.println(F("  a       attach both servos at their last commanded angles"));
   Serial.println(F("  ?       print current commanded angles"));
@@ -174,8 +175,8 @@ void setup() {
   attachServos();
 
   Serial.println(F("Servo calibration tool ready."));
-  Serial.println(F("Initial command is 180 degrees for both servos."));
-  Serial.println(F("Test range is 0-360 degrees using 500-3000 microseconds."));
+  Serial.println(F("Initial commands are servo 1 = 60 degrees and servo 2 = 90 degrees."));
+  Serial.println(F("Test range is 0-180 degrees using 500-2500 microseconds."));
   printHelp();
   printState();
 }
